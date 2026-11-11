@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { api, qs } from '../../lib/api';
-import { date, vnd } from '../../lib/format';
+import { date, plural, vnd } from '../../lib/format';
 import { useToast } from '../../lib/toast';
 import { ErrorAlert, Pagination, Spinner } from '../../components/common';
 import ImageManager from '../../components/ImageManager';
@@ -49,7 +49,7 @@ export function ProductList() {
           <input className="form-check-input" type="checkbox" id="low" checked={filters.lowStock === 'true'} onChange={(e) => setFilters({ ...filters, lowStock: e.target.checked ? 'true' : '', page: 1 })} />
           <label className="form-check-label small" htmlFor="low">Low stock (≤ 5)</label>
         </div>
-        {data && <span className="ms-auto align-self-center small text-muted">{data.total} products</span>}
+        {data && <span className="ms-auto align-self-center small text-muted">{plural(data.total, 'product')}</span>}
       </div></div>
       <ErrorAlert error={error} />
       {!data ? <Spinner /> : (

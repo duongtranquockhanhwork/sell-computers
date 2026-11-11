@@ -66,7 +66,7 @@ router.get('/media/gen/:icon/:hue/:view.svg', (req, res) => {
   <rect width="400" height="300" fill="url(#g)"/>
   <circle cx="330" cy="50" r="90" fill="${accent}" opacity=".08"/><circle cx="60" cy="270" r="70" fill="${accent}" opacity=".08"/>
   <g transform="${transform}">${ICONS[icon](accent)}</g>
-  <text x="16" y="28" font-family="Segoe UI, Arial, sans-serif" font-size="15" font-weight="700" fill="#fff" opacity=".9">${brand}</text>
+  <text x="16" y="262" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="700" fill="#fff" opacity=".9">${brand}</text>
   <text x="16" y="284" font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="#fff" opacity=".85">${title}</text>
   <text x="384" y="284" text-anchor="end" font-family="Segoe UI, Arial, sans-serif" font-size="11" fill="#fff" opacity=".6">${caption}</text>
 </svg>`;

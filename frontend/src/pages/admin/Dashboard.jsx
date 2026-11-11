@@ -6,7 +6,7 @@ import {
 } from 'chart.js';
 import { Bar, Doughnut, Line } from 'react-chartjs-2';
 import { api, qs } from '../../lib/api';
-import { STATUS, dateTime, short, vnd } from '../../lib/format';
+import { STATUS, dateTime, plural, short, vnd } from '../../lib/format';
 import { ErrorAlert, Spinner, StatusBadge } from '../../components/common';
 
 ChartJS.register(CategoryScale, LinearScale, BarController, BarElement, LineController, LineElement, PointElement,
@@ -25,10 +25,10 @@ function Kpi({ icon, label, value, sub, color = 'primary' }) {
   return (
     <div className="card kpi h-100">
       <div className="card-body d-flex gap-3 align-items-center">
-        <div className={`kpi-icon bg-${color}-subtle text-${color}`}><i className={`bi bi-${icon}`} /></div>
+        <div className={`kpi-icon bg-${color}-subtle text-${color} d-none d-sm-flex`}><i className={`bi bi-${icon}`} /></div>
         <div className="min-w-0">
           <div className="small text-muted">{label}</div>
-          <div className="fs-4 fw-bold text-truncate">{value}</div>
+          <div className="fs-4 fw-bold text-truncate" title={String(value)}>{value}</div>
           {sub && <div className="small text-muted">{sub}</div>}
         </div>
       </div>
@@ -40,8 +40,8 @@ function Kpi({ icon, label, value, sub, color = 'primary' }) {
 function NeedsAttention({ i }) {
   if (!i) return null;
   const tiles = [
-    ['hourglass-split', 'warning', `${i.toConfirm} orders to confirm`, '/admin/orders?status=pending'],
-    ['truck', 'primary', `${i.toShip} orders to ship`, '/admin/orders?status=confirmed'],
+    ['hourglass-split', 'warning', `${plural(i.toConfirm, 'order')} to confirm`, '/admin/orders?status=pending'],
+    ['truck', 'primary', `${plural(i.toShip, 'order')} to ship`, '/admin/orders?status=confirmed'],
     ['exclamation-octagon', 'danger', `${i.outOfStock} variants out of stock`, '/admin/products?lowStock=true'],
     ['box-seam', 'secondary', `${i.lowStock} variants low on stock (1-5)`, '/admin/products?lowStock=true'],
   ];
@@ -63,8 +63,8 @@ function NeedsAttention({ i }) {
               <ul className="list-unstyled mb-0">
                 {i.lowStockItems.map((x) => (
                   <li key={`${x.productId}-${x.variant}`} className="d-flex justify-content-between border-bottom py-1">
-                    <Link to={`/admin/products/${x.productId}`} className="text-truncate me-2">{x.product} <span className="text-muted">({x.variant})</span></Link>
-                    <span className={`badge ${x.stock === 0 ? 'text-bg-danger' : 'text-bg-warning'}`}>{x.stock} left</span>
+                    <Link to={`/admin/products/${x.productId}`} className="text-truncate d-block min-w-0 me-2" title={`${x.product} (${x.variant})`}>{x.product} <span className="text-muted">({x.variant})</span></Link>
+                    <span className={`badge flex-shrink-0 align-self-center ${x.stock === 0 ? 'text-bg-danger' : 'text-bg-warning'}`}>{x.stock} left</span>
                   </li>
                 ))}
               </ul>
@@ -97,7 +97,7 @@ function SimpleDashboard() {
         <div className="col-6 col-xl-3"><Kpi icon="people" label="Total customers" value={d.users.total.toLocaleString()} sub={`${d.users.newThisMonth} new this month`} /></div>
         <div className="col-6 col-xl-3"><Kpi icon="person-plus" label="New users (30 days)" value={d.users.new30d} color="info" /></div>
         <div className="col-6 col-xl-3"><Kpi icon="receipt" label="Orders" value={d.orders.total.toLocaleString()} sub={`${d.orders.last30d} in the last 30 days · ${d.orders.pending} pending`} color="warning" /></div>
-        <div className="col-6 col-xl-3"><Kpi icon="cash-coin" label="Revenue" value={`${short(d.orders.revenue)}₫`} sub={`${vnd(d.orders.revenue30d)} last 30 days`} color="success" /></div>
+        <div className="col-6 col-xl-3"><Kpi icon="cash-coin" label="Revenue" value={`${short(d.orders.revenue)}₫`} sub={`${short(d.orders.revenue30d)}₫ last 30 days`} color="success" /></div>
       </div>
       <NeedsAttention i={d.insights} />
       <div className="row g-3 mb-3">

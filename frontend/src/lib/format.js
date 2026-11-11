@@ -1,3 +1,6 @@
+// "1 item", "2 items".
+export const plural = (n, word) => `${Number(n).toLocaleString('en-US')} ${word}${Number(n) === 1 ? '' : 's'}`;
+
 export const vnd = (n) => `${Math.round(Number(n || 0)).toLocaleString('en-US')}₫`;
 
 export const date = (d) =>

@@ -25,6 +25,8 @@ body { background: var(--th-bg); }
 .search-box { max-width: 640px; }
 .suggest-list { z-index: 1050; top: 100%; }
 .catbar { background: var(--th-navy-2); }
+.catbar .overflow-auto { scrollbar-width: none; }
+.catbar .overflow-auto::-webkit-scrollbar { display: none; }
 .catbar-link { color: #cbd5e1; text-decoration: none; padding: .55rem .8rem; white-space: nowrap; font-size: .9rem; border-bottom: 2px solid transparent; }
 .catbar-link:hover { color: #fff; }
 .catbar-link.active { color: #fff; border-bottom-color: #38bdf8; }
@@ -37,6 +39,8 @@ body { background: var(--th-bg); }
 .section-title { font-size: 1.35rem; font-weight: 700; margin: 0; }
 .cat-tile { display: flex; flex-direction: column; align-items: center; gap: .4rem; padding: .9rem .3rem; background: #fff; border-radius: 12px; text-decoration: none; color: #0f172a; font-size: .8rem; text-align: center; height: 100%; border: 1px solid #e2e8f0; transition: .15s; }
 .cat-tile i { font-size: 1.6rem; color: var(--th-sky); }
+/* Bootstrap stops at row-cols-6: nine category tiles in one row on wide screens. */
+@media (min-width: 1200px) { .row-cols-xl-9 > * { flex: 0 0 auto; width: 11.1111%; } }
 .cat-tile:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(2,132,199,.15); border-color: #bae6fd; }
 
 /* ---------- Product cards ---------- */
@@ -129,7 +133,11 @@ body { background: var(--th-bg); }
   .stepper button { flex-direction: column; gap: .2rem; }
   .variant-option { min-width: calc(50% - .5rem); }
   .price { font-size: 1rem; }
+  /* Two product cards per row on phones: tighter padding so long prices fit at 360px. */
+  .product-card .card-body { padding: .75rem; }
+  .product-card .price { font-size: .95rem; }
 }
+.stars { white-space: nowrap; }
 
 /* ---------- Product image gallery and admin image manager ---------- */
 .gallery-main { position: relative; outline: none; }
@@ -162,6 +170,13 @@ body { background: var(--th-bg); }
 .need-tile i { font-size: 1.4rem; color: var(--th-sky); }
 .need-tile:hover { border-color: #7dd3fc; box-shadow: 0 6px 16px rgba(2,132,199,.12); }
 .brand-strip { display: flex; flex-wrap: wrap; gap: .5rem; }
+.brand-more { color: var(--th-sky); }
+/* Phones: brands in one swipeable row instead of a wall of pills. */
+@media (max-width: 575.98px) {
+  .brand-strip { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+  .brand-strip::-webkit-scrollbar { display: none; }
+  .brand-pill { flex-shrink: 0; }
+}
 .brand-pill { display: inline-flex; align-items: center; gap: .4rem; padding: .35rem .8rem; border: 1px solid #e2e8f0; border-radius: 999px; background: #fff; color: #0f172a; text-decoration: none; font-weight: 600; font-size: .85rem; }
 .brand-pill span { color: #94a3b8; font-weight: 400; font-size: .75rem; }
 .brand-pill:hover, .brand-pill.active { border-color: var(--th-sky); color: var(--th-sky); background: #f0f9ff; }
@@ -173,6 +188,8 @@ body { background: var(--th-bg); }
 .spec-chips { display: flex; flex-wrap: wrap; gap: 4px; }
 .spec-chip { font-size: .7rem; background: #f1f5f9; color: #334155; border-radius: 6px; padding: 1px 6px; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 .price-tag { line-height: 1.2; }
+.price-tag.stacked { min-width: 0; }
+.price-tag.stacked .price-was { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 1.2em; margin-bottom: 2px; }
 .product-overview { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: .75rem 1rem; font-size: .9rem; }
 .product-overview ul { padding-left: 1.1rem; }
 .product-overview li { margin-bottom: .2rem; }
@@ -224,3 +241,7 @@ body { background: var(--th-bg); }
   .fab { width: 44px; height: 44px; }
   .card-actions { opacity: 1; }
 }
+
+/* Compare table: the label column stays visible while scrolling sideways on small screens. */
+.compare-table tr > th:first-child { position: sticky; left: 0; z-index: 1; background: #fff; box-shadow: 1px 0 0 #e2e8f0; }
+@media (max-width: 575.98px) { .compare-table tr > th:first-child { width: 96px !important; min-width: 96px; } }

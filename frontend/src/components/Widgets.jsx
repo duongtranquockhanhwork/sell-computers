@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import { useCart } from '../lib/cart';
 import { useShopping } from '../lib/shopping';
-import { vnd } from '../lib/format';
+import { plural, vnd } from '../lib/format';
 
 // Drawer that slides in after "Add to cart", like on most online stores.
 export function MiniCart() {
@@ -41,7 +41,7 @@ export function MiniCart() {
         </div>
         {quote && (
           <div className="p-3 border-top">
-            <div className="d-flex justify-content-between mb-1"><span>{count} items · Subtotal</span><b>{vnd(quote.summary.subtotal)}</b></div>
+            <div className="d-flex justify-content-between mb-1"><span>{plural(count, 'item')} · Subtotal</span><b>{vnd(quote.summary.subtotal)}</b></div>
             {quote.summary.shippingFee > 0 ? (
               <div className="small text-muted mb-3">Add {vnd(quote.freeShippingThreshold - quote.summary.subtotal)} more for free shipping</div>
             ) : <div className="small text-success mb-3"><i className="bi bi-truck me-1" />Free shipping unlocked</div>}

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { api, qs } from '../lib/api';
-import { vnd } from '../lib/format';
+import { plural, vnd } from '../lib/format';
 import { EmptyState, ErrorAlert, Pagination, PriceTag, ProductCard, Spinner } from '../components/common';
 import { usePageMeta } from '../lib/seo';
 
@@ -25,12 +25,15 @@ const PRICE_PRESETS = [
   [30000000, '', 'Over 30M'],
 ];
 
+const BRAND_PILLS = 10;
+
 export default function Catalog() {
   const { slug } = useParams();
   const [params, setParams] = useSearchParams();
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [brands, setBrands] = useState([]);
+  const [allBrands, setAllBrands] = useState(false);
   const [categories, setCategories] = useState([]);
   const [tags, setTags] = useState([]);
   const [view, setView] = useState(() => {
@@ -187,7 +190,7 @@ export default function Catalog() {
         <div>
           <h1 className="h3 mb-1">{q ? <>Results for “{q}”</> : current?.name || 'All products'}</h1>
           <div className="text-muted small">
-            {data ? `${data.total} products` : '...'}
+            {data ? plural(data.total, 'product') : '...'}
             {current?.description && ` · ${current.description}`}
             {filters.tag && <span className="badge text-bg-light ms-2">#{filters.tag} <button className="btn-close btn-close-sm ms-1" style={{ fontSize: '.5rem' }} onClick={() => update({ tag: '' })} aria-label="Remove tag" /></span>}
           </div>
@@ -211,9 +214,15 @@ export default function Catalog() {
         <div className="col-lg-9">
           {brands.length > 1 && (
             <div className="brand-strip mb-3">
-              {brands.map((b) => (
+              {/* The 10 brands with most products (and any selected one); the rest behind "+N more". */}
+              {(allBrands ? brands : [...brands].sort((a, b) => b.count - a.count).filter((b, i) => i < BRAND_PILLS || selectedBrands.includes(b.name))).map((b) => (
                 <button key={b.name} className={`brand-pill ${selectedBrands.includes(b.name) ? 'active' : ''}`} onClick={() => toggleBrand(b.name)}>{b.name}<span>{b.count}</span></button>
               ))}
+              {brands.length > BRAND_PILLS && (
+                <button className="brand-pill brand-more" onClick={() => setAllBrands(!allBrands)}>
+                  {allBrands ? 'Show less' : `+${brands.length - BRAND_PILLS} more`}
+                </button>
+              )}
             </div>
           )}
           <ErrorAlert error={error} />

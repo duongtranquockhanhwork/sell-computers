@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { api, qs } from '../../lib/api';
-import { PAYMENT, STATUS, date, dateTime, vnd } from '../../lib/format';
+import { PAYMENT, STATUS, date, dateTime, plural, vnd } from '../../lib/format';
 import { useToast } from '../../lib/toast';
 import { EmptyState, ErrorAlert, Pagination, Spinner, StatusBadge } from '../../components/common';
 import { OrderInfo, OrderItems, OrderTimeline, OrderTotals } from '../../components/OrderView';
@@ -49,7 +49,7 @@ export function AdminOrders() {
             <input className="form-control" placeholder="Order number, customer or email" value={draft.q} onChange={(e) => setDraft({ ...draft, q: e.target.value })} />
             <button className="btn btn-outline-secondary" aria-label="Search"><i className="bi bi-search" /></button>
           </form>
-          {data && <span className="ms-auto small text-muted">{data.total} orders · {vnd(data.sum)}</span>}
+          {data && <span className="ms-auto small text-muted">{plural(data.total, 'order')} · {vnd(data.sum)}</span>}
         </div>
       </div></div>
       <ErrorAlert error={error} />

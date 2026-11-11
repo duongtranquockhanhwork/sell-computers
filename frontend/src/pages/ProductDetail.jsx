@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { useCart } from '../lib/cart';
-import { dateTime, vnd } from '../lib/format';
+import { dateTime, plural, vnd } from '../lib/format';
 import { getSocket } from '../lib/socket';
 import { useToast } from '../lib/toast';
 import { EmptyState, ErrorAlert, PagedProducts, Pagination, Spinner, Stars } from '../components/common';
@@ -26,7 +26,7 @@ function SentimentSummary({ s }) {
   const pct = (n) => Math.round((n / s.analysed) * 100);
   return (
     <div className="mt-3 pt-3 border-top">
-      <div className="small fw-semibold mb-1"><i className="bi bi-robot me-1" />What buyers say (AI sentiment, {s.analysed} comments)</div>
+      <div className="small fw-semibold mb-1"><i className="bi bi-robot me-1" />What buyers say (AI sentiment, {plural(s.analysed, 'comment')})</div>
       <div className="progress" style={{ height: 10 }} role="img" aria-label={`${pct(s.positive)}% positive, ${pct(s.neutral)}% neutral, ${pct(s.negative)}% negative`}>
         <div className="progress-bar bg-success" style={{ width: `${pct(s.positive)}%` }} />
         <div className="progress-bar bg-secondary" style={{ width: `${pct(s.neutral)}%` }} />
@@ -67,7 +67,7 @@ function RatingPanel({ product, rating, setRating }) {
           <div className="display-5 fw-bold">{rating.average.toFixed(1)}</div>
           <div>
             <Stars value={rating.average} size="1.2rem" />
-            <div className="small text-muted">{rating.count} ratings</div>
+            <div className="small text-muted">{plural(rating.count, 'rating')}</div>
           </div>
         </div>
         {[5, 4, 3, 2, 1].map((s) => (
@@ -305,7 +305,7 @@ export default function ProductDetail() {
           <h1 className="h3">{p.name}</h1>
           <div className="d-flex align-items-center gap-2 small mb-3 flex-wrap">
             <Stars value={rating.average} /> <span>{rating.average.toFixed(1)}</span>
-            <span className="text-muted">({rating.count} ratings)</span>
+            <span className="text-muted">({plural(rating.count, 'rating')})</span>
             <span className="text-muted">· {p.soldCount} sold</span>
             <span className="text-muted">· SKU {variant?.sku}</span>
           </div>

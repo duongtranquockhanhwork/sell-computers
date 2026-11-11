@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Link, Route, Routes } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -17,12 +17,23 @@ import Checkout from './pages/Checkout';
 import OrderSuccess from './pages/OrderSuccess';
 import { ForgotPassword, Login, Register, SetPassword } from './pages/Auth';
 import { AccountLayout, MyOrderDetail, MyOrders, Profile } from './pages/account/Account';
-import AdminLayout from './pages/admin/AdminLayout';
-import Dashboard from './pages/admin/Dashboard';
-import { Categories, ProductForm, ProductList } from './pages/admin/Products';
-import { AdminDiscounts, AdminOrderDetail, AdminOrders, AdminUsers } from './pages/admin/Manage';
-import { EmptyState } from './components/common';
+import { EmptyState, Spinner } from './components/common';
 import { Compare, TrackOrder, Wishlist } from './pages/Shopping';
+
+// The administration pages (and Chart.js) are loaded only when an administrator
+// opens them, so shoppers download a much smaller bundle.
+const named = (load, name) => lazy(() => load().then((m) => ({ default: m[name] })));
+const loadProducts = () => import('./pages/admin/Products');
+const loadManage = () => import('./pages/admin/Manage');
+const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'));
+const Dashboard = lazy(() => import('./pages/admin/Dashboard'));
+const ProductList = named(loadProducts, 'ProductList');
+const ProductForm = named(loadProducts, 'ProductForm');
+const Categories = named(loadProducts, 'Categories');
+const AdminOrders = named(loadManage, 'AdminOrders');
+const AdminOrderDetail = named(loadManage, 'AdminOrderDetail');
+const AdminUsers = named(loadManage, 'AdminUsers');
+const AdminDiscounts = named(loadManage, 'AdminDiscounts');
 
 function NotFound() {
   return (
@@ -41,6 +52,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <AuthProvider>
           <CartProvider>
           <ShoppingProvider>
+            <Suspense fallback={<Spinner />}>
             <Routes>
               <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<Dashboard />} />
@@ -75,6 +87,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
                 <Route path="*" element={<NotFound />} />
               </Route>
             </Routes>
+            </Suspense>
           </ShoppingProvider>
           </CartProvider>
         </AuthProvider>

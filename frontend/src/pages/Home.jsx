@@ -106,7 +106,7 @@ export default function Home() {
       <Hero />
       <div className="container">
         <section className="my-4">
-          <div className="row g-2 row-cols-3 row-cols-md-5 row-cols-xl-9">
+          <div className="row g-2 row-cols-3 row-cols-md-5 row-cols-xl-9 justify-content-center">
             {cats.map((c) => (
               <div className="col" key={c.slug}>
                 <Link to={`/category/${c.slug}`} className="cat-tile">

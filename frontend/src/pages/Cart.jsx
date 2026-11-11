@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../lib/cart';
-import { vnd } from '../lib/format';
+import { plural, vnd } from '../lib/format';
 import { EmptyState, Spinner } from '../components/common';
 
 export function DiscountInput() {
@@ -80,7 +80,7 @@ export default function Cart() {
 
   return (
     <div className="container py-4">
-      <h1 className="h3 mb-4">Shopping cart <span className="text-muted fs-6">({items.reduce((s, i) => s + i.quantity, 0)} items)</span></h1>
+      <h1 className="h3 mb-4">Shopping cart <span className="text-muted fs-6">({plural(items.reduce((s, i) => s + i.quantity, 0), 'item')})</span></h1>
       <div className="row g-4">
         <div className="col-lg-8">
           {!quote && <Spinner />}

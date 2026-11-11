@@ -4,23 +4,27 @@ import { StatusBadge } from './common';
 
 export function OrderItems({ order }) {
   return (
+    // On phones the image and unit-price columns are hidden; the unit price is shown under the name.
+    <div className="table-responsive">
     <table className="table align-middle mb-0">
-      <thead className="small text-muted"><tr><th colSpan={2}>Product</th><th className="text-end">Unit price</th><th className="text-center">Qty</th><th className="text-end">Total</th></tr></thead>
+      <thead className="small text-muted"><tr><th className="d-none d-sm-table-cell" /><th>Product</th><th className="text-end d-none d-sm-table-cell">Unit price</th><th className="text-center">Qty</th><th className="text-end">Total</th></tr></thead>
       <tbody>
         {order.items.map((i, idx) => (
           <tr key={idx}>
-            <td style={{ width: 64 }}>{i.image && <img src={i.image} alt="" width={56} className="rounded" />}</td>
+            <td className="d-none d-sm-table-cell" style={{ width: 64 }}>{i.image && <img src={i.image} alt="" width={56} className="rounded" />}</td>
             <td>
               {i.slug ? <Link to={`/products/${i.slug}`} className="fw-semibold text-body">{i.productName}</Link> : <span className="fw-semibold">{i.productName}</span>}
               <div className="small text-muted">{i.variantName}</div>
+              <div className="small text-muted d-sm-none">{vnd(i.unitPrice)} each</div>
             </td>
-            <td className="text-end">{vnd(i.unitPrice)}</td>
+            <td className="text-end d-none d-sm-table-cell">{vnd(i.unitPrice)}</td>
             <td className="text-center">{i.quantity}</td>
             <td className="text-end fw-semibold">{vnd(i.lineTotal)}</td>
           </tr>
         ))}
       </tbody>
     </table>
+    </div>
   );
 }
 

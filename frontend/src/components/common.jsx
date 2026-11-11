@@ -76,7 +76,22 @@ export function Pagination({ page, totalPages, onChange, compact = false }) {
   );
 }
 
-export function PriceTag({ price, compareAt, discount, from, size = '' }) {
+export function PriceTag({ price, compareAt, discount, from, size = '', stacked = false }) {
+  // Stacked (product cards): the original price and the badge go on their own
+  // line above the price, so long prices never push other elements out of the card.
+  if (stacked) {
+    return (
+      <div className={`price-tag stacked ${size}`}>
+        <div className="price-was small">
+          {compareAt ? <><del className="text-muted">{vnd(compareAt)}</del><span className="badge text-bg-danger ms-1">-{discount}%</span></> : ' '}
+        </div>
+        <div className="text-nowrap">
+          {from && <span className="small text-muted fw-normal me-1">From</span>}
+          <span className="price">{vnd(price)}</span>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className={`price-tag ${size}`}>
       {from && <span className="small text-muted fw-normal me-1">From</span>}
@@ -118,7 +133,7 @@ export function ProductCard({ p }) {
         </div>
       )}
       <div className="card-body d-flex flex-column">
-        <div className="small text-muted text-uppercase fw-semibold mb-1">{p.brand} · {p.category?.name}</div>
+        <div className="small text-muted text-uppercase fw-semibold mb-1 text-truncate">{p.brand} · {p.category?.name}</div>
         <Link to={`/products/${p.slug}`} className="product-title">{p.name}</Link>
         {p.keySpecs?.length > 0 && (
           <div className="spec-chips mb-2">{p.keySpecs.map((s) => <span key={s} className="spec-chip">{s}</span>)}</div>
@@ -127,11 +142,11 @@ export function ProductCard({ p }) {
         <div className="d-flex align-items-center gap-2 small mb-2">
           <Stars value={p.avgRating} size=".8rem" />
           <span className="text-muted">({p.ratingCount})</span>
-          {p.soldCount > 0 && <span className="text-muted ms-auto">{p.soldCount} sold</span>}
+          {p.soldCount > 0 && <span className="text-muted ms-auto text-nowrap d-none d-sm-inline">{p.soldCount} sold</span>}
         </div>
         <div className="mt-auto d-flex align-items-end justify-content-between gap-2">
-          <PriceTag price={p.price} compareAt={p.compareAtPrice} discount={p.discountPercent} from={p.variantCount > 1} />
-          <Link to={`/products/${p.slug}`} className="btn btn-sm btn-outline-primary flex-shrink-0">View</Link>
+          <PriceTag price={p.price} compareAt={p.compareAtPrice} discount={p.discountPercent} from={p.variantCount > 1} stacked />
+          <Link to={`/products/${p.slug}`} className="btn btn-sm btn-outline-primary flex-shrink-0 d-none d-sm-inline-block">View</Link>
         </div>
       </div>
     </div>

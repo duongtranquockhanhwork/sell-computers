@@ -260,4 +260,7 @@ const blurbs = {
   ],
 };
 
+// More products per category (catalog-more.js), so each category has two pages.
+for (const [slug, list] of Object.entries(require('./catalog-more'))) products[slug].push(...list);
+
 module.exports = { categories, products, blurbs };
