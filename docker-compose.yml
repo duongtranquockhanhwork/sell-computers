@@ -1,0 +1,205 @@
+# TechHaven - computer & component store
+# Start everything with:   docker compose up -d
+# Then open:               http://localhost:8080
+name: techhaven
+
+x-common-env: &common-env
+  TZ: Asia/Ho_Chi_Minh
+  NODE_ENV: production
+  REDIS_URL: redis://redis:6379
+  AMQP_URL: amqp://techhaven:techhaven@rabbitmq:5672
+  JWT_SECRET: ${JWT_SECRET:-techhaven-docker-secret-please-change}
+  PUBLIC_URL: ${PUBLIC_URL:-http://localhost:8080}
+
+services:
+  # ---------- Edge: reverse proxy + load balancer ----------
+  gateway:
+    build: ./gateway
+    image: techhaven/gateway:1.0
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    depends_on:
+      frontend:
+        condition: service_started
+      api:
+        condition: service_healthy
+    networks: [edge]
+    restart: unless-stopped
+
+  # ---------- Front-end: React SPA built and served by Nginx ----------
+  frontend:
+    build: ./frontend
+    image: techhaven/frontend:1.0
+    networks: [edge]
+    restart: unless-stopped
+
+  # ---------- Core API (stateless, horizontally scaled) ----------
+  api:
+    build: ./services/api
+    image: techhaven/api:1.0
+    environment:
+      <<: *common-env
+      DATABASE_URL: postgres://techhaven:techhaven@postgres:5432/techhaven
+      SEARCH_URL: http://search:4100
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@techhaven.local}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin@123}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+    deploy:
+      replicas: ${API_REPLICAS:-3}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks: [edge, backend]
+    restart: unless-stopped
+
+  # ---------- Realtime: Socket.IO relay for reviews / order status ----------
+  realtime:
+    build: ./services/realtime
+    image: techhaven/realtime:1.0
+    environment:
+      <<: *common-env
+    deploy:
+      replicas: ${REALTIME_REPLICAS:-2}
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks: [edge, backend]
+    restart: unless-stopped
+
+  # ---------- Mailer: consumes the email queue, sends via SMTP ----------
+  # Default: every e-mail goes to the Mailpit inbox (http://localhost:8025).
+  # Set SMTP_* in .env (e.g. Gmail) to deliver real e-mails instead.
+  mailer:
+    build: ./services/mailer
+    image: techhaven/mailer:1.0
+    environment:
+      <<: *common-env
+      SMTP_HOST: ${SMTP_HOST:-mailpit}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      MAIL_FROM: ${MAIL_FROM:-TechHaven <no-reply@techhaven.local>}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+    networks: [backend]
+    restart: unless-stopped
+
+  # ---------- Assistant: AI chatbot + review sentiment analysis ----------
+  assistant:
+    build: ./services/assistant
+    image: techhaven/assistant:1.0
+    environment:
+      <<: *common-env
+      API_URL: http://api:3000
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3.5-flash-lite}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+    networks: [edge, backend]
+    restart: unless-stopped
+
+  # ---------- Mailpit: local inbox that shows every e-mail the shop sends ----------
+  mailpit:
+    image: axllent/mailpit:v1.21
+    ports:
+      - "8025:8025"   # web inbox
+    networks: [backend]
+    restart: unless-stopped
+
+  # ---------- Search: ElasticSearch indexer + query API ----------
+  search:
+    build: ./services/search
+    image: techhaven/search:1.0
+    environment:
+      <<: *common-env
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    networks: [backend]
+    restart: unless-stopped
+
+  # ---------- Infrastructure ----------
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: techhaven
+      POSTGRES_PASSWORD: techhaven
+      POSTGRES_DB: techhaven
+      TZ: Asia/Ho_Chi_Minh
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U techhaven -d techhaven"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [backend]
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [backend]
+    restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: techhaven
+      RABBITMQ_DEFAULT_PASS: techhaven
+    ports:
+      - "15672:15672"   # management UI (evidence of async messaging)
+    volumes:
+      - rabbitdata:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 20
+    networks: [backend]
+    restart: unless-stopped
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.3
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: -Xms512m -Xmx512m
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=5s || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+    networks: [backend]
+    restart: unless-stopped
+
+networks:
+  edge:
+  backend:
+
+volumes:
+  pgdata:
+  rabbitdata:
+  esdata:

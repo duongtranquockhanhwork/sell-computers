@@ -1,0 +1,12 @@
+{
+  "name": "techhaven-mailer",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Consumes the email.send queue and delivers mail over SMTP",
+  "main": "src/index.js",
+  "scripts": { "start": "node src/index.js", "test": "node --test \"test/**/*.test.js\"" },
+  "dependencies": {
+    "amqplib": "^0.10.5",
+    "nodemailer": "^6.9.16"
+  }
+}

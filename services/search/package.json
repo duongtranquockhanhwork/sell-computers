@@ -1,0 +1,13 @@
+{
+  "name": "techhaven-search",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ElasticSearch indexer (RabbitMQ consumer) and product search API",
+  "main": "src/index.js",
+  "scripts": { "start": "node src/index.js" },
+  "dependencies": {
+    "@elastic/elasticsearch": "^8.15.0",
+    "amqplib": "^0.10.5",
+    "express": "^5.1.0"
+  }
+}

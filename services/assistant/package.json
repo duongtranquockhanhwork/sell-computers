@@ -1,0 +1,17 @@
+{
+  "name": "techhaven-assistant",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI features: shopping assistant chatbot and review sentiment analysis",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test \"test/**/*.test.js\""
+  },
+  "dependencies": {
+    "@google/genai": "^3.1.0",
+    "amqplib": "^0.10.9",
+    "express": "^5.3.0",
+    "sentiment": "^5.0.2"
+  }
+}

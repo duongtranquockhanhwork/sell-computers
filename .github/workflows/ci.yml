@@ -1,0 +1,64 @@
+# Continuous integration for TechHaven.
+# Every push and pull request: unit tests, frontend build, then the whole stack is
+# built with Docker Compose and exercised end-to-end through the load balancer.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  unit:
+    name: Unit tests & frontend build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: API unit tests
+        working-directory: services/api
+        run: npm ci && npm test
+      - name: Mailer unit tests
+        working-directory: services/mailer
+        run: npm ci && npm test
+      - name: Assistant (AI) unit tests
+        working-directory: services/assistant
+        run: npm ci && npm test
+      - name: Realtime and search install check
+        run: |
+          (cd services/realtime && npm ci && node --check src/index.js)
+          (cd services/search && npm ci && node --check src/index.js)
+      - name: Frontend production build
+        working-directory: frontend
+        run: npm ci && npm run build
+
+  e2e:
+    name: Docker Compose end-to-end
+    needs: unit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate compose file
+        run: docker compose config --quiet
+      - name: Build and start the stack
+        run: docker compose up -d --build --wait --wait-timeout 300
+      - name: Wait for the search index
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fs "http://localhost:8080/api/products?q=laptop" | grep -q elasticsearch; then exit 0; fi
+            sleep 5
+          done
+          echo "search index not ready"; exit 1
+      - name: End-to-end API scenario (includes the Mailpit inbox check)
+        run: node tests/e2e-api.mjs http://localhost:8080
+      - name: Logs on failure
+        if: failure()
+        run: docker compose logs --tail 200
+      - name: Tear down
+        if: always()
+        run: docker compose down -v
