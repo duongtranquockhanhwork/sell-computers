@@ -27,6 +27,17 @@ const pick = (arr) => arr[Math.floor(rand() * arr.length)];
 const between = (a, b) => a + Math.floor(rand() * (b - a + 1));
 const round1000 = (n) => Math.round(n / 1000) * 1000;
 
+const PHOTO_DIR = path.join(__dirname, 'images');
+function productPhotos(slug) {
+  const out = [];
+  for (let n = 1; n <= 10; n++) {
+    const file = path.join(PHOTO_DIR, `${slug}-${n}.jpg`);
+    if (!fs.existsSync(file)) break;
+    out.push(file);
+  }
+  return out;
+}
+
 async function insertMany(client, table, columns, rows, suffix = '') {
   const out = [];
   for (let i = 0; i < rows.length; i += 400) {
@@ -114,10 +125,22 @@ async function seedCatalog(client) {
       const pid = rows[0].id;
       const t = encodeURIComponent(name);
       const b = encodeURIComponent(brand);
-      for (let view = 0; view < 4; view++) {
-        await client.query('INSERT INTO product_images (product_id, url, position) VALUES ($1,$2,$3)', [
-          pid, `/api/media/gen/${cat.icon}/${hue}/${view}.svg?t=${t}&b=${b}`, view,
+      // Real product photos shipped in seed/images/<slug>-<n>.jpg are stored in the
+      // media table (served by /api/media/:id from any replica); a product without
+      // photos falls back to the generated SVG illustrations.
+      const photos = productPhotos(slugify(name));
+      const urls = [];
+      for (const file of photos) {
+        const m = await client.query('INSERT INTO media (mime, data) VALUES ($1, $2) RETURNING id', [
+          'image/jpeg', fs.readFileSync(file),
         ]);
+        urls.push(`/api/media/${m.rows[0].id}`);
+      }
+      if (!urls.length) {
+        for (let view = 0; view < 4; view++) urls.push(`/api/media/gen/${cat.icon}/${hue}/${view}.svg?t=${t}&b=${b}`);
+      }
+      for (const [position, url] of urls.entries()) {
+        await client.query('INSERT INTO product_images (product_id, url, position) VALUES ($1,$2,$3)', [pid, url, position]);
       }
       const onSale = index % 2 === 1;
       for (const [i, [label, delta]] of variants.entries()) {

@@ -27,8 +27,11 @@ CONTENTS OF THE SUBMISSION
   The first start builds 7 images and downloads PostgreSQL, Redis, RabbitMQ,
   ElasticSearch, Mailpit and Nginx (about 3-6 minutes depending on the network).
   On the first start the API creates the schema and loads demo data:
-  9 categories, 55 products (123 variants, 4 images each, about half on sale),
-  160 customers, ~1,000 orders since January 2024, ratings and comments.
+  9 categories, 118 products (264 variants, 3-4 real product photos each - no
+  internet needed, the photos ship in services/api/src/seed/images and are
+  stored in PostgreSQL; about half on sale; 13-14 products per category, so
+  every category has two pages), 160 customers, ~1,000 orders since January
+  2024, ratings and comments.
 
   Then open:   http://localhost:8080          the shop
                http://localhost:8080/admin    the administrator area
